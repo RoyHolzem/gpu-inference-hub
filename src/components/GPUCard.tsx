@@ -74,7 +74,7 @@ export default function GPUCard({ gpu, pricing, accentColor = 'green', currency 
 
       {/* Pricing */}
       <div className="border-t border-border pt-4 mt-4">
-        {lowestPrice ? (
+        {lowestPrice && lowestPrice.pricePerHour > 0 ? (
           <>
             <div className="flex items-center justify-between mb-3">
               <span className="text-sm text-gray-400">Best Price</span>
@@ -91,7 +91,7 @@ export default function GPUCard({ gpu, pricing, accentColor = 'green', currency 
               <span className="text-3xl font-bold">{currency}{lowestPrice.pricePerHour.toFixed(2)}</span>
               <span className="text-gray-500">/hr</span>
             </div>
-            {spotPrice && (
+            {spotPrice && spotPrice > 0 && (
               <div className="flex items-center gap-2 mt-2">
                 <Zap className="w-4 h-4 text-yellow-500" />
                 <span className="text-sm text-gray-400">
@@ -101,8 +101,12 @@ export default function GPUCard({ gpu, pricing, accentColor = 'green', currency 
             )}
           </>
         ) : (
-          <div className="text-center py-4 text-gray-500">
-            No pricing available
+          <div className="text-center py-4">
+            <div className="flex items-baseline justify-center gap-2 mb-2">
+              <span className="text-3xl font-bold text-gray-600">{currency}0.00</span>
+              <span className="text-gray-600">/hr</span>
+            </div>
+            <p className="text-xs text-gray-500">No live pricing available</p>
           </div>
         )}
       </div>

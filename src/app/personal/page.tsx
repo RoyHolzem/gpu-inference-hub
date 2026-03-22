@@ -5,12 +5,14 @@ import { Cpu, ArrowLeft, Search } from 'lucide-react'
 import Link from 'next/link'
 import { useState } from 'react'
 import GPUCard from '@/components/GPUCard'
-import { consumerGPUs, mockPricing, modelRequirements } from '@/lib/gpu-data'
+import { consumerGPUs, modelRequirements } from '@/lib/gpu-data'
+import { useLivePricing } from '@/lib/api'
 
 export default function PersonalPage() {
   const [searchQuery, setSearchQuery] = useState('')
   const [sortBy, setSortBy] = useState<'vram' | 'performance'>('vram')
   const [currency, setCurrency] = useState<'$' | '€'>('$')
+  const { pricing, loading, error } = useLivePricing()
 
   const toggleCurrency = () => {
     setCurrency(currency === '$' ? '€' : '$')
@@ -119,9 +121,27 @@ export default function PersonalPage() {
           </div>
         </motion.div>
 
+        {/* Loading State */}
+        {loading && (
+          <div className="flex items-center justify-center py-20">
+            <div className="text-center">
+              <div className="animate-spin rounded-full h-12 w-12 border-4 border-accent-green border-t-transparent mx-auto"></div>
+              <p className="text-gray-400 mt-4">Loading live pricing from APIs...</p>
+            </div>
+          </div>
+        )}
+
+        {/* Error State */}
+        {error && (
+          <div className="bg-yellow-900/20 border border-yellow-500 rounded-lg p-4 mb-8">
+            <p className="text-yellow-200">⚠️ {error}. Prices will show as $0.00</p>
+          </div>
+        )}
+
+        {/* GPU Grid */}
         <div className="grid md:grid-cols-2 lg:grid-cols-3 gap-6">
           {filteredGPUs.map((gpu, index) => {
-            const gpuPricing = mockPricing.filter(p => p.gpuId === gpu.id)
+            const gpuPricing = pricing.filter(p => p.gpuId === gpu.id)
             return (
               <motion.div
                 key={gpu.id}

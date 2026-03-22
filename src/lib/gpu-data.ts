@@ -246,37 +246,8 @@ export const datacenterGPUs: GPU[] = [
   },
 ]
 
-export const mockPricing: GPUPricing[] = [
-  // Consumer GPUs
-  { gpuId: 'rtx-3060', provider: 'vast', pricePerHour: 0.03, spotPrice: 0.015, availability: 'high', location: 'US-East', lastUpdated: new Date() },
-  { gpuId: 'rtx-3060', provider: 'runpod', pricePerHour: 0.15, availability: 'high', location: 'US-West', lastUpdated: new Date() },
-  { gpuId: 'rtx-3090', provider: 'vast', pricePerHour: 0.20, spotPrice: 0.10, availability: 'high', location: 'EU-West', lastUpdated: new Date() },
-  { gpuId: 'rtx-3090', provider: 'runpod', pricePerHour: 0.40, availability: 'medium', location: 'US-East', lastUpdated: new Date() },
-  { gpuId: 'rtx-4090', provider: 'vast', pricePerHour: 0.60, spotPrice: 0.35, availability: 'medium', location: 'US-West', lastUpdated: new Date() },
-  { gpuId: 'rtx-4090', provider: 'runpod', pricePerHour: 0.79, availability: 'medium', location: 'EU-West', lastUpdated: new Date() },
-  { gpuId: 'rtx-5090', provider: 'vast', pricePerHour: 1.20, spotPrice: 0.70, availability: 'low', location: 'US-East', lastUpdated: new Date() },
-  { gpuId: 'rtx-5090', provider: 'runpod', pricePerHour: 1.49, availability: 'low', location: 'US-West', lastUpdated: new Date() },
-
-  // Datacenter GPUs
-  { gpuId: 'a100-40gb', provider: 'vast', pricePerHour: 0.52, spotPrice: 0.35, availability: 'high', location: 'US-East', lastUpdated: new Date() },
-  { gpuId: 'a100-40gb', provider: 'runpod', pricePerHour: 0.60, availability: 'high', location: 'US-West', lastUpdated: new Date() },
-  { gpuId: 'a100-40gb', provider: 'aws', pricePerHour: 1.89, availability: 'high', location: 'us-east-1', lastUpdated: new Date() },
-  { gpuId: 'a100-80gb', provider: 'vast', pricePerHour: 0.80, spotPrice: 0.50, availability: 'medium', location: 'EU-West', lastUpdated: new Date() },
-  { gpuId: 'a100-80gb', provider: 'runpod', pricePerHour: 1.19, availability: 'medium', location: 'US-East', lastUpdated: new Date() },
-  { gpuId: 'a100-80gb', provider: 'aws', pricePerHour: 3.20, availability: 'medium', location: 'us-east-1', lastUpdated: new Date() },
-  { gpuId: 'h100-pcie', provider: 'vast', pricePerHour: 1.50, spotPrice: 0.90, availability: 'low', location: 'US-West', lastUpdated: new Date() },
-  { gpuId: 'h100-pcie', provider: 'runpod', pricePerHour: 1.89, availability: 'low', location: 'EU-West', lastUpdated: new Date() },
-  { gpuId: 'h100-pcie', provider: 'aws', pricePerHour: 4.50, availability: 'medium', location: 'us-east-1', lastUpdated: new Date() },
-  { gpuId: 'h100-sxm', provider: 'vast', pricePerHour: 2.10, spotPrice: 1.30, availability: 'low', location: 'US-East', lastUpdated: new Date() },
-  { gpuId: 'h100-sxm', provider: 'runpod', pricePerHour: 2.69, availability: 'low', location: 'US-West', lastUpdated: new Date() },
-  { gpuId: 'h100-sxm', provider: 'aws', pricePerHour: 6.50, availability: 'low', location: 'us-east-1', lastUpdated: new Date() },
-  { gpuId: 'h200', provider: 'vast', pricePerHour: 3.20, spotPrice: 2.00, availability: 'low', location: 'US-East', lastUpdated: new Date() },
-  { gpuId: 'h200', provider: 'runpod', pricePerHour: 3.99, availability: 'low', location: 'US-West', lastUpdated: new Date() },
-  { gpuId: 'h200', provider: 'aws', pricePerHour: 8.00, availability: 'low', location: 'us-east-1', lastUpdated: new Date() },
-  { gpuId: 'b200', provider: 'vast', pricePerHour: 4.50, spotPrice: 3.00, availability: 'low', location: 'US-West', lastUpdated: new Date() },
-  { gpuId: 'b200', provider: 'runpod', pricePerHour: 5.49, availability: 'low', location: 'US-East', lastUpdated: new Date() },
-  { gpuId: 'b200', provider: 'aws', pricePerHour: 12.00, availability: 'low', location: 'us-east-1', lastUpdated: new Date() },
-]
+// No mock pricing data - all pricing comes from live APIs
+// If APIs fail, prices will show as $0.00
 
 export const modelRequirements: ModelRequirement[] = [
   { name: 'Phi-3 Mini', parameters: '3.8B', vram_fp16: 8, vram_int4: 2, minGPU: 'RTX 3060', recommendedGPU: 'RTX 4060' },
