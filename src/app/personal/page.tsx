@@ -6,13 +6,11 @@ import Link from 'next/link'
 import { useState } from 'react'
 import GPUCard from '@/components/GPUCard'
 import { consumerGPUs, mockPricing, modelRequirements } from '@/lib/gpu-data'
-import { useLivePricing } from '@/lib/api'
 
 export default function PersonalPage() {
   const [searchQuery, setSearchQuery] = useState('')
-  const [sortBy, setSortBy] = useState<'vram' | 'price' | 'performance'>('vram')
+  const [sortBy, setSortBy] = useState<'vram' | 'performance'>('vram')
   const [currency, setCurrency] = useState<'$' | '€'>('$')
-  const { pricing, loading, error } = useLivePricing()
 
   const toggleCurrency = () => {
     setCurrency(currency === '$' ? '€' : '$')
@@ -28,7 +26,6 @@ export default function PersonalPage() {
 
   return (
     <main className="min-h-screen bg-background">
-      {/* Header */}
       <header className="sticky top-0 z-50 bg-background/80 backdrop-blur-lg border-b border-border">
         <div className="max-w-7xl mx-auto px-6 py-4 flex items-center justify-between">
           <div className="flex items-center gap-4">
@@ -44,7 +41,6 @@ export default function PersonalPage() {
             </div>
           </div>
           <div className="flex items-center gap-4">
-            {/* Currency Toggle */}
             <button
               onClick={toggleCurrency}
               className="px-3 py-1 rounded-lg text-sm font-mono transition-colors bg-surface border border-border hover:border-accent-green"
@@ -60,7 +56,6 @@ export default function PersonalPage() {
       </header>
 
       <div className="max-w-7xl mx-auto px-6 py-8">
-        {/* Search and Filter */}
         <div className="flex flex-col md:flex-row gap-4 mb-8">
           <div className="relative flex-1">
             <Search className="absolute left-3 top-1/2 -translate-y-1/2 w-5 h-5 text-gray-500" />
@@ -92,7 +87,6 @@ export default function PersonalPage() {
           </div>
         </div>
 
-        {/* Model Requirements Reference */}
         <motion.div
           initial={{ opacity: 0, y: 20 }}
           animate={{ opacity: 1, y: 0 }}
@@ -125,30 +119,9 @@ export default function PersonalPage() {
           </div>
         </motion.div>
 
-        {/* Loading State */}
-        {loading && (
-          <div className="flex items-center justify-center py-20">
-            <div className="text-center">
-              <div className="animate-spin rounded-full h-12 w-12 border-4 border-accent-green border-t-transparent mx-auto"></div>
-              <p className="text-gray-400 mt-4">Loading live pricing...</p>
-            </div>
-          </div>
-        )}
-
-        {/* Error State */}
-        {error && (
-          <div className="bg-red-900/20 border border-red-500 rounded-lg p-4 mb-8">
-            <p className="text-red-200">⚠️ Failed to load live pricing. Using cached data.</p>
-          </div>
-        )}
-
-        {/* GPU Grid */}
         <div className="grid md:grid-cols-2 lg:grid-cols-3 gap-6">
           {filteredGPUs.map((gpu, index) => {
-            const gpuPricing = pricing.length > 0 
-              ? pricing.filter(p => p.gpuId === gpu.id)
-              : mockPricing.filter(p => p.gpuId === gpu.id)
-            
+            const gpuPricing = mockPricing.filter(p => p.gpuId === gpu.id)
             return (
               <motion.div
                 key={gpu.id}
