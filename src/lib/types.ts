@@ -14,6 +14,8 @@ export interface GPU {
   architecture: string
   nvlink?: string
   multiGpu?: boolean
+  purchasePrice?: number // in EUR
+  retailers?: Retailer[]
 }
 
 export interface GPUPricing {

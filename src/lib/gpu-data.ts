@@ -14,6 +14,11 @@ export const consumerGPUs: GPU[] = [
     releaseYear: 2021,
     msrp: 329,
     architecture: 'Ampere',
+    purchasePrice: 329,
+    retailers: [
+      { name: 'Amazon DE', url: 'https://www.amazon.de/s?k=rtx+3060' },
+      { name: 'Caseking', url: 'https://www.caseking.de' },
+    ],
   },
   {
     id: 'rtx-3070',
