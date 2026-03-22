@@ -9,7 +9,7 @@ import { datacenterGPUs, mockPricing, modelRequirements } from '@/lib/gpu-data'
 
 export default function EnterprisePage() {
   const [searchQuery, setSearchQuery] = useState('')
-  const [sortBy, setSortBy] = useState<'vram' | 'price' | 'performance'>('vram')
+  const [sortBy, setSortBy] = useState<'vram' | 'performance'>('vram')
   const [currency, setCurrency] = useState<'$' | '€'>('$')
 
   const toggleCurrency = () => {
@@ -39,6 +39,7 @@ export default function EnterprisePage() {
                 <p className="text-xs text-gray-500">Data Center GPUs (A100 to B200)</p>
               </div>
             </div>
+          </div>
           <div className="flex items-center gap-4">
             <button
               onClick={toggleCurrency}
