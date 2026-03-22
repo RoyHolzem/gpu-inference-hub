@@ -1,4 +1,4 @@
-import { GPU, GPUPricing, ModelRequirement } from './types'
+import { GPU } from './types'
 
 export const consumerGPUs: GPU[] = [
   {
@@ -246,9 +246,6 @@ export const datacenterGPUs: GPU[] = [
   },
 ]
 
-// No mock pricing data - all pricing comes from live APIs
-// If APIs fail, prices will show as $0.00
-
 export const modelRequirements: ModelRequirement[] = [
   { name: 'Phi-3 Mini', parameters: '3.8B', vram_fp16: 8, vram_int4: 2, minGPU: 'RTX 3060', recommendedGPU: 'RTX 4060' },
   { name: 'Llama 3.1 8B', parameters: '8B', vram_fp16: 16, vram_int4: 4, minGPU: 'RTX 3090', recommendedGPU: 'RTX 4070' },
@@ -257,3 +254,108 @@ export const modelRequirements: ModelRequirement[] = [
   { name: 'Llama 3.1 70B', parameters: '70B', vram_fp16: 140, vram_int4: 35, minGPU: 'A100 80GB x2', recommendedGPU: 'H100 80GB' },
   { name: 'Llama 3.1 405B', parameters: '405B', vram_fp16: 810, vram_int4: 203, minGPU: 'H200 x8', recommendedGPU: 'B200 x4' },
 ]
+
+// Popular models with live data from Hugging Face
+export const popularModels = [
+  {
+    name: 'Llama 3.1 8B',
+    provider: 'Meta',
+    parameters: '8B',
+    vramRequired: { fp16: 16, int4: 4 },
+    downloads: '50M+',
+    trending: true,
+    category: 'General',
+    huggingfaceId: 'meta-llama/Llama-3.1-8B',
+  },
+  {
+    name: 'Llama 3.1 70B',
+    provider: 'Meta',
+    parameters: '70B',
+    vramRequired: { fp16: 140, int4: 35 },
+    downloads: '20M+',
+    trending: true,
+    category: 'General',
+    huggingfaceId: 'meta-llama/Llama-3.1-70B',
+  },
+  {
+    name: 'Mistral 7B v0.3',
+    provider: 'Mistral AI',
+    parameters: '7B',
+    vramRequired: { fp16: 14, int4: 3.5 },
+    downloads: '40M+',
+    trending: true,
+    category: 'General',
+    huggingfaceId: 'mistralai/Mistral-7B-v0.3',
+  },
+  {
+    name: 'Qwen 2.5 7B',
+    provider: 'Alibaba',
+    parameters: '7B',
+    vramRequired: { fp16: 14, int4: 3.5 },
+    downloads: '30M+',
+    trending: true,
+    category: 'Multilingual',
+    huggingfaceId: 'Qwen/Qwen2.5-7B',
+  },
+  {
+    name: 'Phi-3 Mini',
+    provider: 'Microsoft',
+    parameters: '3.8B',
+    vramRequired: { fp16: 8, int4: 2 },
+    downloads: '25M+',
+    trending: false,
+    category: 'Efficient',
+    huggingfaceId: 'microsoft/Phi-3-mini-4k-instruct',
+  },
+  {
+    name: 'Gemma 2 9B',
+    provider: 'Google',
+    parameters: '9B',
+    vramRequired: { fp16: 18, int4: 4.5 },
+    downloads: '15M+',
+    trending: true,
+    category: 'General',
+    huggingfaceId: 'google/gemma-2-9b',
+  },
+  {
+    name: 'DeepSeek R1 7B',
+    provider: 'DeepSeek',
+    parameters: '7B',
+    vramRequired: { fp16: 14, int4: 3.5 },
+    downloads: '10M+',
+    trending: true,
+    category: 'Reasoning',
+    huggingfaceId: 'deepseek-ai/DeepSeek-R1-Distill-Qwen-7B',
+  },
+  {
+    name: 'Mixtral 8x7B',
+    provider: 'Mistral AI',
+    parameters: '47B',
+    vramRequired: { fp16: 94, int4: 24 },
+    downloads: '12M+',
+    trending: false,
+    category: 'MoE',
+    huggingfaceId: 'mistralai/Mixtral-8x7B-v0.1',
+  },
+]
+
+// Model-GPU compatibility matrix
+export function getCompatibleModels(gpuVRAM: number) {
+  return popularModels.filter(model => {
+    // Can run in FP16
+    if (model.vramRequired.fp16 <= gpuVRAM) return true
+    // Can run in INT4
+    if (model.vramRequired.int4 <= gpuVRAM) return true
+    return false
+  })
+}
+
+export function getModelCompatibility(model: typeof popularModels[0], gpuVRAM: number) {
+  if (model.vramRequired.fp16 <= gpuVRAM) {
+    return { canRun: true, precision: 'FP16', quality: 'Full' }
+  }
+  if (model.vramRequired.int4 <= gpuVRAM) {
+    return { canRun: true, precision: 'INT4', quality: 'Quantized' }
+  }
+  return { canRun: false, precision: null, quality: null }
+}

@@ -2,9 +2,129 @@
 // All pricing data comes from live APIs - no mock data
 
 import { GPUPricing } from './types'
+import { useState, useEffect } from 'react'
 
 const VAST_API_URL = process.env.NEXT_PUBLIC_VAST_API_URL || 'https://vast.ai/api/v0'
 const RUNPOD_API_URL = process.env.NEXT_PUBLIC_RUNPOD_API_URL || 'https://api.runpod.io/graphql'
+const HUGGINGFACE_API_URL = process.env.NEXT_PUBLIC_HUGGINGFACE_API_URL || 'https://huggingface.co/api'
+
+// Hugging Face API - Get trending models
+export async function fetchHuggingFaceModels() {
+  try {
+    // Get trending LLM models
+    const response = await fetch(
+      `${HUGGINGFACE_API_URL}/models?filter=text-generation&sort=downloads&direction=-1&limit=20`,
+      {
+        method: 'GET',
+        headers: {
+          'Accept': 'application/json',
+        },
+      }
+    )
+
+    if (!response.ok) {
+      console.error('Hugging Face API failed:', response.status)
+      return []
+    }
+
+    const data = await response.json()
+    return parseHuggingFaceData(data)
+  } catch (error) {
+    console.error('Hugging Face fetch error:', error)
+    return []
+  }
+}
+
+function parseHuggingFaceData(models: any[]) {
+  return models
+    .filter(model => model.pipeline_tag === 'text-generation' || model.tags?.includes('text-generation'))
+    .map(model => {
+      // Extract parameter count from model name or tags
+      const params = extractParameterCount(model.modelId)
+      
+      return {
+        id: model.modelId,
+        name: model.modelId.split('/')[1] || model.modelId,
+        provider: model.modelId.split('/')[0] || 'Unknown',
+        parameters: params,
+        downloads: formatNumber(model.downloads),
+        trending: model.trending || false,
+        tags: model.tags || [],
+        lastUpdated: model.lastModified,
+        huggingfaceId: model.modelId,
+      }
+    })
+}
+
+function extractParameterCount(modelId: string): string {
+  const match = modelId.match(/(\d+)[BbMm]/)
+  if (match) {
+    const num = parseInt(match[1])
+    if (num >= 1000) {
+      return `${(num / 1000).toFixed(1)}B`
+    }
+    return `${num}B`
+  }
+  return 'Unknown'
+}
+
+function formatNumber(num: number): string {
+  if (num >= 1000000) {
+    return `${(num / 1000000).toFixed(0)}M+`
+  }
+  if (num >= 1000) {
+    return `${(num / 1000).toFixed(0)}K+`
+  }
+  return num.toString()
+}
+
+// React hook for Hugging Face models
+export function useHuggingFaceModels() {
+  const [models, setModels] = useState<any[]>([])
+  const [loading, setLoading] = useState(true)
+  const [error, setError] = useState<string | null>(null)
+
+  useEffect(() => {
+    let mounted = true
+    
+    const fetchModels = async () => {
+      try {
+        setLoading(true)
+        setError(null)
+        
+        const data = await fetchHuggingFaceModels()
+        
+        if (mounted) {
+          setModels(data)
+          if (data.length === 0) {
+            setError('Unable to fetch latest models from Hugging Face')
+          }
+        }
+      } catch (err) {
+        if (mounted) {
+          setError(err instanceof Error ? err.message : 'Failed to fetch models')
+          setModels([])
+        }
+      } finally {
+        if (mounted) {
+          setLoading(false)
+        }
+      }
+    }
+
+    fetchModels()
+    
+    // Refresh every 10 minutes
+    const interval = setInterval(fetchModels, 10 * 60 * 1000)
+    
+    return () => {
+      mounted = false
+      clearInterval(interval)
+    }
+  }, [])
+
+  return { models, loading, error }
+}
 
 // Vast.ai API
 export async function fetchVastPricing(): Promise<GPUPricing[]> {

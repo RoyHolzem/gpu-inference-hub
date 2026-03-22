@@ -1,12 +1,24 @@
 'use client'
 
 import { motion } from 'framer-motion'
-import { Cpu, Building2, Zap, TrendingUp, Globe, Twitter } from 'lucide-react'
-import Link from 'next/link'
+import { Cpu, TrendingUp, Zap, Star, ChevronRight } from 'lucide-react'
+import { useState } from 'react'
+import { consumerGPUs, getCompatibleModels, getModelCompatibility, popularModels } from '@/lib/gpu-data'
+import { GPU } from '@/lib/types'
 
 export default function Home() {
+  const [selectedGPU, setSelectedGPU] = useState<GPU | null>(null)
+  const [showModels, setShowModels] = useState(false)
+
+  const compatibleModels = selectedGPU ? getCompatibleModels(selectedGPU.vram) : []
+
+  const handleGPUClick = (gpu: GPU) => {
+    setSelectedGPU(gpu)
+    setShowModels(true)
+  }
+
   return (
-    <main className="min-h-screen bg-grid relative overflow-hidden">
+    <main className="min-h-screen bg-background">
       {/* Header */}
       <header className="fixed top-0 left-0 right-0 z-50 bg-background/80 backdrop-blur-lg border-b border-border">
         <div className="max-w-7xl mx-auto px-6 py-4 flex items-center justify-between">
@@ -14,11 +26,11 @@ export default function Home() {
             <Cpu className="w-8 h-8 text-accent-green" />
             <span className="text-xl font-bold">GPU Inference Hub</span>
           </div>
-          <div className="flex items-center gap-2">
-            <span className="flex items-center gap-2 text-sm text-gray-400">
+          <div className="flex items-center gap-4">
+            <div className="flex items-center gap-2 text-sm">
               <span className="w-2 h-2 rounded-full bg-accent-green pulse-live" />
-              Live Data
-            </span>
+              <span className="text-gray-400">Live Data</span>
+            </div>
           </div>
         </div>
       </header>
@@ -31,199 +43,252 @@ export default function Home() {
             animate={{ opacity: 1, y: 0 }}
             transition={{ duration: 0.6 }}
           >
-            <h1 className="text-6xl md:text-7xl font-bold mb-6">
-              <span className="gradient-text">Find Your Perfect GPU</span>
+            <h1 className="text-5xl md:text-6xl font-bold mb-6">
+              <span className="gradient-text">Which GPU for Which Model?</span>
             </h1>
-            <p className="text-xl text-gray-400 mb-12 max-w-2xl mx-auto">
-              Real-time GPU comparison, live pricing from Vast.ai, RunPod, AWS, and global demand analytics.
-              100% live data, updated every 5 minutes.
+            <p className="text-xl text-gray-400 mb-8 max-w-2xl mx-auto">
+              Select your GPU. See which LLMs you can run locally. Live pricing, benchmarks, and compatibility.
             </p>
           </motion.div>
+        </div>
+      </section>
+
+      {/* GPU Selection Grid */}
+      <section className="px-6 pb-20">
+        <div className="max-w-7xl mx-auto">
+          <motion.div
+            initial={{ opacity: 0, y: 20 }}
+            animate={{ opacity: 1, y: 0 }}
+            transition={{ duration: 0.6, delay: 0.2 }}
+            className="mb-8"
+          >
+            <h2 className="text-2xl font-bold mb-2">Select Your GPU</h2>
+            <p className="text-gray-400">Click on a GPU to see compatible models</p>
+          </motion.div>
+
+          <div className="grid grid-cols-2 md:grid-cols-3 lg:grid-cols-5 gap-4 mb-16">
+            {consumerGPUs.map((gpu, index) => (
+              <motion.div
+                key={gpu.id}
+                initial={{ opacity: 0, scale: 0.9 }}
+                animate={{ opacity: 1, scale: 1 }}
+                transition={{ delay: index * 0.05 }}
+                onClick={() => handleGPUClick(gpu)}
+                className={`
+                  relative cursor-pointer transition-all duration-300
+                  ${selectedGPU?.id === gpu.id 
+                    ? 'ring-2 ring-accent-green scale-105' 
+                    : 'hover:scale-105'}
+                `}
+              >
+                <div className="bg-gradient-to-br from-card to-surface border border-border rounded-xl p-6 h-full">
+                  {/* GPU Icon */}
+                  <div className="w-16 h-16 mx-auto mb-4 rounded-xl bg-accent-green/10 flex items-center justify-center">
+                    <Cpu className="w-8 h-8 text-accent-green" />
+                  </div>
+
+                  {/* GPU Name */}
+                  <h3 className="text-center font-bold mb-2">{gpu.name}</h3>
+
+                  {/* Specs */}
+                  <div className="text-center text-sm text-gray-400 space-y-1">
+                    <div className="font-semibold text-accent-green">{gpu.vram} GB</div>
+                    <div>{gpu.architecture}</div>
+                    <div className="text-xs">{gpu.releaseYear}</div>
+                  </div>
+
+                  {/* Performance Badge */}
+                  {gpu.id === 'rtx-5090' && (
+                    <div className="absolute -top-2 -right-2 bg-accent-green text-black text-xs px-2 py-1 rounded-full font-bold">
+                      FASTEST
+                    </div>
+                  )}
+                </div>
+              </motion.div>
+            ))}
+          </div>
+
+          {/* Model Compatibility Section */}
+          {showModels && selectedGPU && (
+            <motion.div
+              initial={{ opacity: 0, y: 20 }}
+              animate={{ opacity: 1, y: 0 }}
+              className="mb-16"
+            >
+              <div className="flex items-center justify-between mb-6">
+                <div>
+                  <h2 className="text-2xl font-bold">
+                    Models for {selectedGPU.name}
+                  </h2>
+                  <p className="text-gray-400">
+                    {selectedGPU.vram} GB VRAM • {compatibleModels.length} compatible models
+                  </p>
+                </div>
+                <button
+                  onClick={() => setShowModels(false)}
+                  className="text-sm text-gray-400 hover:text-white transition-colors"
+                >
+                  Clear Selection
+                </button>
+              </div>
+
+              <div className="grid md:grid-cols-2 lg:grid-cols-3 gap-4">
+                {compatibleModels.map((model, index) => {
+                  const compatibility = getModelCompatibility(model, selectedGPU.vram)
+                  
+                  return (
+                    <motion.div
+                      key={model.name}
+                      initial={{ opacity: 0, x: -20 }}
+                      animate={{ opacity: 1, x: 0 }}
+                      transition={{ delay: index * 0.05 }}
+                      className="bg-card border border-border rounded-xl p-6"
+                    >
+                      <div className="flex items-start justify-between mb-3">
+                        <div>
+                          <h3 className="font-bold mb-1">{model.name}</h3>
+                          <p className="text-sm text-gray-400">{model.provider}</p>
+                        </div>
+                        {model.trending && (
+                          <Star className="w-5 h-5 text-yellow-500 fill-current" />
+                        )}
+                      </div>
+
+                      <div className="flex items-center gap-3 mb-4">
+                        <span className="text-xs px-2 py-1 rounded-full bg-accent-green/20 text-accent-green">
+                          {model.parameters}
+                        </span>
+                        <span className="text-xs px-2 py-1 rounded-full bg-accent-purple/20 text-accent-purple">
+                          {model.category}
+                        </span>
+                      </div>
+
+                      <div className="space-y-2 mb-4">
+                        <div className="flex items-center justify-between text-sm">
+                          <span className="text-gray-400">VRAM Required</span>
+                          <span className="font-mono">
+                            {compatibility.precision === 'FP16' 
+                              ? `${model.vramRequired.fp16} GB` 
+                              : `${model.vramRequired.int4} GB`}
+                          </span>
+                        </div>
+                        <div className="flex items-center justify-between text-sm">
+                          <span className="text-gray-400">Precision</span>
+                          <span className={`font-semibold ${
+                            compatibility.precision === 'FP16' ? 'text-accent-green' : 'text-yellow-500'
+                          }`}>
+                            {compatibility.precision}
+                          </span>
+                        </div>
+                        <div className="flex items-center justify-between text-sm">
+                          <span className="text-gray-400">Quality</span>
+                          <span>{compatibility.quality}</span>
+                        </div>
+                        <div className="flex items-center justify-between text-sm">
+                          <span className="text-gray-400">Downloads</span>
+                          <span>{model.downloads}</span>
+                        </div>
+                      </div>
+
+                      <a
+                        href={`https://huggingface.co/${model.huggingfaceId}`}
+                        target="_blank"
+                        rel="noopener noreferrer"
+                        className="flex items-center justify-center gap-2 w-full py-2 bg-surface border border-border rounded-lg hover:border-accent-green transition-colors text-sm"
+                      >
+                        View on Hugging Face
+                        <ChevronRight className="w-4 h-4" />
+                      </a>
+                    </motion.div>
+                  )
+                })}
+              </div>
+            </motion.div>
+          )}
+
+          {/* All Models (if no GPU selected) */}
+          {!showModels && (
+            <motion.div
+              initial={{ opacity: 0, y: 20 }}
+              animate={{ opacity: 1, y: 0 }}
+              className="mb-16"
+            >
+              <div className="flex items-center justify-between mb-6">
+                <div>
+                  <h2 className="text-2xl font-bold">Popular Models</h2>
+                  <p className="text-gray-400">Latest from Hugging Face, Llama, and more</p>
+                </div>
+              </div>
+
+              <div className="grid md:grid-cols-2 lg:grid-cols-4 gap-4">
+                {popularModels.slice(0, 8).map((model, index) => (
+                  <motion.div
+                    key={model.name}
+                    initial={{ opacity: 0, y: 20 }}
+                    animate={{ opacity: 1, y: 0 }}
+                    transition={{ delay: index * 0.05 }}
+                    className="bg-card border border-border rounded-xl p-6"
+                  >
+                    <div className="flex items-start justify-between mb-3">
+                      <div>
+                        <h3 className="font-bold mb-1">{model.name}</h3>
+                        <p className="text-sm text-gray-400">{model.provider}</p>
+                      </div>
+                      {model.trending && (
+                        <TrendingUp className="w-5 h-5 text-accent-green" />
+                      )}
+                    </div>
+
+                    <div className="flex items-center gap-2 mb-3">
+                      <span className="text-xs px-2 py-1 rounded-full bg-accent-green/20 text-accent-green">
+                        {model.parameters}
+                      </span>
+                      <span className="text-xs px-2 py-1 rounded-full bg-accent-purple/20 text-accent-purple">
+                        {model.category}
+                      </span>
+                    </div>
+
+                    <div className="flex items-center justify-between text-sm mb-4">
+                      <span className="text-gray-400">Downloads</span>
+                      <span className="font-semibold">{model.downloads}</span>
+                    </div>
+
+                    <div className="text-xs text-gray-500">
+                      VRAM: {model.vramRequired.fp16} GB (FP16) / {model.vramRequired.int4} GB (INT4)
+                    </div>
+                  </motion.div>
+                ))}
+              </div>
+            </motion.div>
+          )}
 
           {/* Stats */}
           <motion.div
             initial={{ opacity: 0, y: 20 }}
             animate={{ opacity: 1, y: 0 }}
-            transition={{ duration: 0.6, delay: 0.2 }}
-            className="grid grid-cols-2 md:grid-cols-4 gap-4 mb-16"
+            transition={{ duration: 0.6, delay: 0.4 }}
+            className="grid grid-cols-2 md:grid-cols-4 gap-4"
           >
             <div className="bg-card border border-border rounded-xl p-6">
-              <div className="text-3xl font-bold text-accent-green mb-2">50+</div>
-              <div className="text-sm text-gray-400">GPU Models</div>
+              <div className="text-3xl font-bold text-accent-green mb-2">{consumerGPUs.length}</div>
+              <div className="text-sm text-gray-400">Consumer GPUs</div>
             </div>
             <div className="bg-card border border-border rounded-xl p-6">
-              <div className="text-3xl font-bold text-accent-blue mb-2">6</div>
-              <div className="text-sm text-gray-400">Cloud Providers</div>
+              <div className="text-3xl font-bold text-accent-purple mb-2">{popularModels.length}</div>
+              <div className="text-sm text-gray-400">Popular Models</div>
             </div>
             <div className="bg-card border border-border rounded-xl p-6">
-              <div className="text-3xl font-bold text-accent-purple mb-2">$106B</div>
-              <div className="text-sm text-gray-400">Inference Market</div>
+              <div className="text-3xl font-bold text-accent-blue mb-2">32 GB</div>
+              <div className="text-sm text-gray-400">Max Consumer VRAM</div>
             </div>
             <div className="bg-card border border-border rounded-xl p-6">
-              <div className="text-3xl font-bold text-accent-orange mb-2">92%</div>
-              <div className="text-sm text-gray-400">NVIDIA Share</div>
+              <div className="flex items-center gap-2">
+                <Zap className="w-6 h-6 text-yellow-500" />
+                <span className="text-3xl font-bold">5 min</span>
+              </div>
+              <div className="text-sm text-gray-400">Refresh Rate</div>
             </div>
           </motion.div>
-        </div>
-      </section>
-
-      {/* Split Section */}
-      <section className="px-6 pb-20">
-        <div className="max-w-7xl mx-auto">
-          <div className="grid md:grid-cols-2 gap-8">
-            {/* Personal Use */}
-            <motion.div
-              initial={{ opacity: 0, x: -20 }}
-              animate={{ opacity: 1, x: 0 }}
-              transition={{ duration: 0.6, delay: 0.3 }}
-            >
-              <Link href="/personal" className="block h-full">
-                <div className="h-full bg-gradient-to-br from-card to-surface border-2 border-accent-green/30 rounded-2xl p-8 card-hover glow-green group cursor-pointer">
-                  <div className="flex items-center gap-4 mb-6">
-                    <div className="w-14 h-14 rounded-xl bg-accent-green/10 flex items-center justify-center group-hover:bg-accent-green/20 transition-colors">
-                      <Zap className="w-7 h-7 text-accent-green" />
-                    </div>
-                    <div>
-                      <h2 className="text-2xl font-bold">Personal Use</h2>
-                      <p className="text-gray-400">Consumer GPUs</p>
-                    </div>
-                  </div>
-
-                  <p className="text-gray-300 mb-6">
-                    RTX 3060 to RTX 5090. Perfect for local LLM inference, fine-tuning, and personal AI projects.
-                  </p>
-
-                  <div className="space-y-3 mb-6">
-                    <div className="flex items-center justify-between text-sm">
-                      <span className="text-gray-400">RTX 5090</span>
-                      <span className="font-mono text-accent-green">32GB VRAM</span>
-                    </div>
-                    <div className="flex items-center justify-between text-sm">
-                      <span className="text-gray-400">RTX 4090</span>
-                      <span className="font-mono text-accent-green">24GB VRAM</span>
-                    </div>
-                    <div className="flex items-center justify-between text-sm">
-                      <span className="text-gray-400">RTX 3090</span>
-                      <span className="font-mono text-accent-green">24GB VRAM</span>
-                    </div>
-                  </div>
-
-                  <div className="flex items-center justify-between">
-                    <span className="text-sm text-gray-500">Starting from</span>
-                    <span className="text-2xl font-bold text-accent-green">$0.03/hr</span>
-                  </div>
-                </div>
-              </Link>
-            </motion.div>
-
-            {/* Enterprise Use */}
-            <motion.div
-              initial={{ opacity: 0, x: 20 }}
-              animate={{ opacity: 1, x: 0 }}
-              transition={{ duration: 0.6, delay: 0.3 }}
-            >
-              <Link href="/enterprise" className="block h-full">
-                <div className="h-full bg-gradient-to-br from-card to-surface border-2 border-accent-purple/30 rounded-2xl p-8 card-hover glow-purple group cursor-pointer">
-                  <div className="flex items-center gap-4 mb-6">
-                    <div className="w-14 h-14 rounded-xl bg-accent-purple/10 flex items-center justify-center group-hover:bg-accent-purple/20 transition-colors">
-                      <Building2 className="w-7 h-7 text-accent-purple" />
-                    </div>
-                    <div>
-                      <h2 className="text-2xl font-bold">Enterprise Use</h2>
-                      <p className="text-gray-400">Data Center GPUs</p>
-                    </div>
-                  </div>
-
-                  <p className="text-gray-300 mb-6">
-                    A100 to B200. High-performance inference at scale. Multi-GPU clusters for 70B+ models.
-                  </p>
-
-                  <div className="space-y-3 mb-6">
-                    <div className="flex items-center justify-between text-sm">
-                      <span className="text-gray-400">B200</span>
-                      <span className="font-mono text-accent-purple">192GB VRAM</span>
-                    </div>
-                    <div className="flex items-center justify-between text-sm">
-                      <span className="text-gray-400">H200</span>
-                      <span className="font-mono text-accent-purple">141GB VRAM</span>
-                    </div>
-                    <div className="flex items-center justify-between text-sm">
-                      <span className="text-gray-400">H100</span>
-                      <span className="font-mono text-accent-purple">80GB VRAM</span>
-                    </div>
-                    <div className="flex items-center justify-between text-sm">
-                      <span className="text-gray-400">A100</span>
-                      <span className="font-mono text-accent-purple">40/80GB VRAM</span>
-                    </div>
-                  </div>
-
-                  <div className="flex items-center justify-between">
-                    <span className="text-sm text-gray-500">Starting from</span>
-                    <span className="text-2xl font-bold text-accent-purple">$0.52/hr</span>
-                  </div>
-                </div>
-              </Link>
-            </motion.div>
-          </div>
-        </div>
-      </section>
-
-      {/* Features Section */}
-      <section className="px-6 py-20 bg-surface/50">
-        <div className="max-w-7xl mx-auto">
-          <motion.div
-            initial={{ opacity: 0, y: 20 }}
-            animate={{ opacity: 1, y: 0 }}
-            transition={{ duration: 0.6 }}
-            className="text-center mb-16"
-          >
-            <h2 className="text-4xl font-bold mb-4">Why GPU Inference Hub?</h2>
-            <p className="text-gray-400 text-lg">Everything you need to make informed GPU decisions</p>
-          </motion.div>
-
-          <div className="grid md:grid-cols-3 gap-8">
-            <motion.div
-              initial={{ opacity: 0, y: 20 }}
-              animate={{ opacity: 1, y: 0 }}
-              transition={{ duration: 0.6, delay: 0.1 }}
-              className="bg-card border border-border rounded-xl p-6"
-            >
-              <TrendingUp className="w-10 h-10 text-accent-green mb-4" />
-              <h3 className="text-xl font-semibold mb-3">Live Pricing</h3>
-              <p className="text-gray-400">
-                Real-time prices from Vast.ai, RunPod, Lambda Labs, AWS, Azure, and GCP. 
-                Updated every 5 minutes.
-              </p>
-            </motion.div>
-
-            <motion.div
-              initial={{ opacity: 0, y: 20 }}
-              animate={{ opacity: 1, y: 0 }}
-              transition={{ duration: 0.6, delay: 0.2 }}
-              className="bg-card border border-border rounded-xl p-6"
-            >
-              <Globe className="w-10 h-10 text-accent-blue mb-4" />
-              <h3 className="text-xl font-semibold mb-3">Global Demand</h3>
-              <p className="text-gray-400">
-                Interactive heatmaps showing GPU demand by region. 
-                Track availability and plan your deployments.
-              </p>
-            </motion.div>
-
-            <motion.div
-              initial={{ opacity: 0, y: 20 }}
-              animate={{ opacity: 1, y: 0 }}
-              transition={{ duration: 0.6, delay: 0.3 }}
-              className="bg-card border border-border rounded-xl p-6"
-            >
-              <Twitter className="w-10 h-10 text-accent-purple mb-4" />
-              <h3 className="text-xl font-semibold mb-3">Live News Feed</h3>
-              <p className="text-gray-400">
-                Twitter integration for GPU and AI inference news. 
-                Stay updated on releases, benchmarks, and market trends.
-              </p>
-            </motion.div>
-          </div>
         </div>
       </section>
 
@@ -235,11 +300,8 @@ export default function Home() {
             <span className="font-semibold">GPU Inference Hub</span>
           </div>
           <p className="text-sm text-gray-500">
-            Built with Next.js, Tailwind CSS, and real-time data. Deployed on AWS Amplify.
+            Live data from Hugging Face, Vast.ai, RunPod • Updated every 5 minutes
           </p>
-          <div className="text-sm text-gray-500">
-            © 2026 GPU Inference Hub
-          </div>
         </div>
       </footer>
     </main>
