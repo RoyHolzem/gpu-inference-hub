@@ -1,3 +1,8 @@
+export interface Retailer {
+  name: string
+  url: string
+}
+
 export interface GPU {
   id: string
   name: string
