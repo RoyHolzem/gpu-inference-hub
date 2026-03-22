@@ -297,8 +297,6 @@ export async function fetchAllPricing(): Promise<GPUPricing[]> {
 }
 
 // React hook for live pricing
-import { useState, useEffect } from 'react'
-
 export function useLivePricing() {
   const [pricing, setPricing] = useState<GPUPricing[]>([])
   const [loading, setLoading] = useState(true)

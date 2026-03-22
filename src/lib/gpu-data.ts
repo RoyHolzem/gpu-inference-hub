@@ -1,4 +1,4 @@
-import { GPU } from './types'
+import { GPU, GPUPricing, ModelRequirement } from './types'
 
 export const consumerGPUs: GPU[] = [
   {
