@@ -1,7 +1,7 @@
 'use client'
 
 import { motion } from 'framer-motion'
-import { Cpu, Zap, DollarSign, MapPin, TrendingUp, TrendingDown, Minus } from 'lucide-react'
+import { Cpu, Zap, MapPin } from 'lucide-react'
 import { GPU, GPUPricing } from '@/lib/types'
 
 interface GPUCardProps {
@@ -11,7 +11,9 @@ interface GPUCardProps {
 }
 
 export default function GPUCard({ gpu, pricing, accentColor = 'green' }: GPUCardProps) {
-  const lowestPrice = pricing.reduce((min, p) => p.pricePerHour < min.pricePerHour ? p : min, pricing[0])
+  const lowestPrice = pricing.length > 0 
+    ? pricing.reduce((min, p) => p.pricePerHour < min.pricePerHour ? p : min, pricing[0])
+    : null
   const spotPrice = pricing.find(p => p.spotPrice)?.spotPrice
 
   const accentClasses = {
@@ -70,43 +72,53 @@ export default function GPUCard({ gpu, pricing, accentColor = 'green' }: GPUCard
 
       {/* Pricing */}
       <div className="border-t border-border pt-4 mt-4">
-        <div className="flex items-center justify-between mb-3">
-          <span className="text-sm text-gray-400">Best Price</span>
-          <div className="flex items-center gap-2">
-            <span className={`text-xs px-2 py-1 rounded-full bg-accent-${accentColor}/20`}>
-              {lowestPrice.provider}
-            </span>
-            <span className={`text-xs px-2 py-1 rounded-full bg-accent-${accentColor}/10`}>
-              {lowestPrice.availability}
-            </span>
-          </div>
-        </div>
-        <div className="flex items-baseline gap-2">
-          <span className="text-3xl font-bold">${lowestPrice.pricePerHour.toFixed(2)}</span>
-          <span className="text-gray-500">/hr</span>
-        </div>
-        {spotPrice && (
-          <div className="flex items-center gap-2 mt-2">
-            <Zap className="w-4 h-4 text-yellow-500" />
-            <span className="text-sm text-gray-400">
-              Spot: <span className="text-yellow-500 font-semibold">${spotPrice.toFixed(2)}/hr</span>
-            </span>
+        {lowestPrice ? (
+          <>
+            <div className="flex items-center justify-between mb-3">
+              <span className="text-sm text-gray-400">Best Price</span>
+              <div className="flex items-center gap-2">
+                <span className={`text-xs px-2 py-1 rounded-full bg-accent-${accentColor}/20`}>
+                  {lowestPrice.provider}
+                </span>
+                <span className={`text-xs px-2 py-1 rounded-full bg-accent-${accentColor}/10`}>
+                  {lowestPrice.availability}
+                </span>
+              </div>
+            </div>
+            <div className="flex items-baseline gap-2">
+              <span className="text-3xl font-bold">${lowestPrice.pricePerHour.toFixed(2)}</span>
+              <span className="text-gray-500">/hr</span>
+            </div>
+            {spotPrice && (
+              <div className="flex items-center gap-2 mt-2">
+                <Zap className="w-4 h-4 text-yellow-500" />
+                <span className="text-sm text-gray-400">
+                  Spot: <span className="text-yellow-500 font-semibold">${spotPrice.toFixed(2)}/hr</span>
+                </span>
+              </div>
+            )}
+          </>
+        ) : (
+          <div className="text-center py-4 text-gray-500">
+            No pricing available
           </div>
         )}
       </div>
 
       {/* Provider Prices */}
-      <div className="mt-4 space-y-2">
-        {pricing.slice(0, 3).map((p) => (
-          <div key={`${p.provider}-${p.location}`} className="flex items-center justify-between text-sm">
-            <div className="flex items-center gap-2">
-              <MapPin className="w-3 h-3 text-gray-500" />
-              <span className="text-gray-400">{p.provider}</span>
+      {pricing.length > 0 && (
+        <div className="mt-4 space-y-2">
+          {pricing.slice(0, 3).map((p, idx) => (
+            <div key={`${p.provider}-${p.location}-${idx}`} className="flex items-center justify-between text-sm">
+              <div className="flex items-center gap-2">
+                <MapPin className="w-3 h-3 text-gray-500" />
+                <span className="text-gray-400">{p.provider}</span>
+              </div>
+              <span className="font-mono">${p.pricePerHour.toFixed(2)}/hr</span>
             </div>
-            <span className="font-mono">${p.pricePerHour.toFixed(2)}/hr</span>
-          </div>
-        ))}
-      </div>
+          ))}
+        </div>
+      )}
 
       {/* MSRP */}
       {gpu.msrp && (
