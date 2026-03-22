@@ -2,21 +2,20 @@
 
 import { motion } from 'framer-motion'
 import { Cpu, Zap, MapPin } from 'lucide-react'
-import { GPUPricing } from '@/lib/types'
-import { usePricing } from '@/lib/api'
-import { useLivePricing } from '@/lib/gpu-data'
+import { GPU, GPUPricing } from '@/lib/types'
 
 interface GPUCardProps {
   gpu: GPU
   pricing: GPUPricing[]
   accentColor?: 'green' | 'purple' | 'blue'
+  currency?: '$' | '€'
 }
 
-export default function GPUCard({ gpu, pricing, accentColor = 'green' }: GPUCardProps) {
+export default function GPUCard({ gpu, pricing, accentColor = 'green', currency = '$' }: GPUCardProps) {
   const lowestPrice = pricing.length > 0 
     ? pricing.reduce((min, p) => p.pricePerHour < min.pricePerHour ? p : min, pricing[0])
-    : null
-  const spotPrice = pricing.find(p => p.spotPrice)?.spotPrice : undefined
+        : null
+  const spotPrice = pricing.find(p => p.spotPrice)?.spotPrice
 
   const accentClasses = {
     green: 'border-accent-green/30 hover:border-accent-green/60 text-accent-green',
@@ -29,6 +28,7 @@ export default function GPUCard({ gpu, pricing, accentColor = 'green' }: GPUCard
     purple: 'hover:shadow-[0_0_20px_rgba(139,92,246,0.2)]',
     blue: 'hover:shadow-[0_0_20px_rgba(59,130,246,0.2)]',
   }
+
   return (
     <motion.div
       initial={{ opacity: 0, y: 20 }}
@@ -46,7 +46,7 @@ export default function GPUCard({ gpu, pricing, accentColor = 'green' }: GPUCard
           <h3 className="text-xl font-bold mb-1">{gpu.name}</h3>
           <p className="text-sm text-gray-500">{gpu.architecture} • {gpu.releaseYear}</p>
         </div>
-        <div className={`w-10 h-10 rounded-lg bg-${accentColor}/10 flex items-center justify-center group-hover:bg-${accentColor}/20 transition-colors`}>
+        <div className={`w-10 h-10 rounded-lg bg-${accentColor}/10 flex items-center justify-center`}>
           <Cpu className={`w-5 h-5 text-accent-${accentColor}`} />
         </div>
       </div>
@@ -88,28 +88,47 @@ export default function GPUCard({ gpu, pricing, accentColor = 'green' }: GPUCard
               </div>
             </div>
             <div className="flex items-baseline gap-2">
-              <span className="text-3xl font-bold">${lowestPrice ? `$${lowestPrice.pricePerHour.toFixed(2)}` : '/hr</span>
-              <span className="text-gray-500">No pricing available</span>
+              <span className="text-3xl font-bold">{currency}{lowestPrice.pricePerHour.toFixed(2)}</span>
+              <span className="text-gray-500">/hr</span>
             </div>
-          )}
+            {spotPrice && (
+              <div className="flex items-center gap-2 mt-2">
+                <Zap className="w-4 h-4 text-yellow-500" />
+                <span className="text-sm text-gray-400">
+                  Spot: <span className="text-yellow-500 font-semibold">{currency}{spotPrice.toFixed(2)}/hr</span>
+                </span>
+              </div>
+            )}
+          </>
+        ) : (
+          <div className="text-center py-4 text-gray-500">
+            No pricing available
+          </div>
         )}
       </div>
 
       {/* Provider Prices */}
       {pricing.length > 0 && (
-        <div key={`${p.provider}-${p.location}-${idx}`} className="flex items-center justify-between text-sm">
-          <div className="flex items-center gap-2">
-            <MapPin className="w-3 h-3 text-gray-500" />
-            <span className="font-mono">${p.pricePerHour.toFixed(2)}/hr</span>
-          </div>
-        ))}
+        <div className="mt-4 space-y-2">
+          {pricing.slice(0, 3).map((p, idx) => (
+            <div key={`${p.provider}-${p.location}-${idx}`} className="flex items-center justify-between text-sm">
+              <div className="flex items-center gap-2">
+                <MapPin className="w-3 h-3 text-gray-500" />
+                <span className="text-gray-400">{p.provider}</span>
+              </div>
+              <span className="font-mono">{currency}{p.pricePerHour.toFixed(2)}/hr</span>
+            </div>
+          ))}
+        </div>
       )}
 
       {/* MSRP */}
       {gpu.msrp && (
         <div className="mt-4 pt-4 border-t border-border">
-          <span className="text-gray-500">MSRP</span>
-          <span className="font-semibold">${gpu.msrp.toLocaleString()}</span>
+          <div className="flex items-center justify-between text-sm">
+            <span className="text-gray-500">MSRP</span>
+            <span className="font-semibold">{currency}{gpu.msrp.toLocaleString()}</span>
+          </div>
         </div>
       )}
     </motion.div>

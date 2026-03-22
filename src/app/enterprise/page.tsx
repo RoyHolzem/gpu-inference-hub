@@ -1,19 +1,22 @@
 'use client'
 
 import { motion } from 'framer-motion'
-import { Building2, ArrowLeft, Filter, Search } from 'lucide-react'
+import { Building2, ArrowLeft, Search } from 'lucide-react'
 import Link from 'next/link'
 import { useState } from 'react'
 import GPUCard from '@/components/GPUCard'
 import { datacenterGPUs, mockPricing, modelRequirements } from '@/lib/gpu-data'
-import { useLivePricing, from '@/lib/api'
-import { useCurrency } from '@/lib/gpu-data'
+import { useLivePricing } from '@/lib/api'
 
 export default function EnterprisePage() {
   const [searchQuery, setSearchQuery] = useState('')
   const [sortBy, setSortBy] = useState<'vram' | 'price' | 'performance'>('vram')
-  const { currency, toggleCurrency } = useCurrency()
+  const [currency, setCurrency] = useState<'$' | '€'>('$')
   const { pricing, loading, error } = useLivePricing()
+
+  const toggleCurrency = () => {
+    setCurrency(currency === '$' ? '€' : '$')
+  }
 
   const filteredGPUs = datacenterGPUs
     .filter(gpu => gpu.name.toLowerCase().includes(searchQuery.toLowerCase()))
@@ -39,13 +42,14 @@ export default function EnterprisePage() {
                 <p className="text-xs text-gray-500">Data Center GPUs (A100 to B200)</p>
               </div>
             </div>
+          </div>
           <div className="flex items-center gap-4">
             {/* Currency Toggle */}
             <button
               onClick={toggleCurrency}
-              className="px-3 py-1 rounded-lg text-sm font-mono transition-colors bg-surface border border-border"
+              className="px-3 py-1 rounded-lg text-sm font-mono transition-colors bg-surface border border-border hover:border-accent-purple"
             >
-              {currency}
+              {currency === '$' ? 'USD ($)' : 'EUR (€)'}
             </button>
             <span className="flex items-center gap-2 text-sm text-gray-400">
               <span className="w-2 h-2 rounded-full bg-accent-purple pulse-live" />
@@ -125,7 +129,7 @@ export default function EnterprisePage() {
         {loading && (
           <div className="flex items-center justify-center py-20">
             <div className="text-center">
-              <div className="animate-spin rounded-full h-12 w-12 border-4 border-accent-purple border-t-transparent"></div>
+              <div className="animate-spin rounded-full h-12 w-12 border-4 border-accent-purple border-t-transparent mx-auto"></div>
               <p className="text-gray-400 mt-4">Loading live pricing...</p>
             </div>
           </div>
@@ -152,7 +156,7 @@ export default function EnterprisePage() {
                 animate={{ opacity: 1, y: 0 }}
                 transition={{ delay: index * 0.05 }}
               >
-                <GPUCard gpu={gpu} pricing={gpuPricing} accentColor="purple" />
+                <GPUCard gpu={gpu} pricing={gpuPricing} accentColor="purple" currency={currency} />
               </motion.div>
             )
           })}
